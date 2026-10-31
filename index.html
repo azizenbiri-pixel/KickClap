@@ -12,6 +12,14 @@
   <meta name="apple-mobile-web-app-title" content="ClipClap" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="description" content="ClipClap : pose ton clip, gagne la battle." />
+  <meta property="og:site_name" content="ClipClap" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:url" content="https://azizenbiri-pixel.github.io/ClipClap/" />
+  <meta property="og:image" content="https://azizenbiri-pixel.github.io/ClipClap/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ClipClap" />
+  <meta name="twitter:image" content="https://azizenbiri-pixel.github.io/ClipClap/icon-512.png" />
   <meta property="og:title" content="ClipClap" />
   <meta property="og:description" content="Pose ton clip. Gagne la battle. Freestyles, clips et battle hebdomadaire." />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -273,6 +281,40 @@ const Watermark = ({ user, gid = 'wmg' }) => {
   );
 };
 
+/* ================= APERÇU PUBLIC (visiteur sans compte, lien partagé ?v=...) ================= */
+const PublicPreview = ({ id, onJoin }) => {
+  const [v, setV] = useState(undefined);
+  useEffect(() => {
+    let on = true;
+    sb.from('video_stats').select('*').eq('id', id).maybeSingle().then(({ data }) => { if (on) setV(data || null); });
+    return () => { on = false; };
+  }, [id]);
+  return (
+    <div className="h-full w-full bg-app text-white overflow-y-auto">
+      <div className="max-w-sm mx-auto px-4 pt-6 pb-10 flex flex-col items-center">
+        <div className="flex items-center gap-2.5 mb-4">
+          <img src="icon-192.png" alt="ClipClap" className="w-10 h-10 rounded-xl" />
+          <div className="leading-tight"><p className="text-lg font-black grad-text">ClipClap</p><p className="text-[11px] text-fuchsia-300 font-bold">#ClipClap</p></div>
+        </div>
+        {v === undefined && <p className="text-xs text-gray-400 py-24">Chargement…</p>}
+        {v === null && <div className="py-16 text-center"><p className="text-sm font-bold mb-1">Vidéo introuvable</p><p className="text-xs text-gray-400">Elle a peut-être été supprimée.</p></div>}
+        {v && <>
+          <div className="relative w-full h-[66vh] rounded-3xl overflow-hidden bg-black border border-white/10">
+            <video src={v.video_url} poster={v.thumb_url || undefined} controls playsInline preload="metadata" className="w-full h-full object-contain bg-black"></video>
+            <Watermark user={v.username} gid="wpv" />
+          </div>
+          <p className="mt-3 text-sm font-extrabold">@{v.username}</p>
+          {v.caption && <p className="text-xs text-gray-300 text-center mt-1">{v.caption}</p>}
+          <p className="text-[11px] text-gray-400 mt-1">❤️ {v.likes_count || 0} · 💬 {v.comments_count || 0}</p>
+        </>}
+        <button onClick={onJoin} className="mt-6 w-full py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm active:scale-95 transition">Rejoindre ClipClap</button>
+        <button onClick={onJoin} className="mt-3 text-[11px] text-gray-400 underline">J'ai déjà un compte</button>
+        <p className="text-[10px] text-gray-500 mt-4 text-center">Gratuit · 15 ans minimum · Pose ton clip, gagne la battle.</p>
+      </div>
+    </div>
+  );
+};
+
 /* ================= FEUILLE GLISSANTE (swipe vers le bas pour fermer) ================= */
 const Sheet = ({ onClose, children, height = 'max-h-[85%]', pos = 'absolute', z = 'z-50' }) => {
   const [y, setY] = useState(0); const [drag, setDrag] = useState(false);
@@ -456,6 +498,7 @@ function ClipClapApp() {
   const [, setTick] = useState(0);
   const [showBattleForm, setShowBattleForm] = useState(false); const [bTitle, setBTitle] = useState(''); const [bDays, setBDays] = useState(7); const [bFile, setBFile] = useState(null);
   const [stats, setStats] = useState({}); // {userId: {followers, profile}}
+  const [joinFromPreview, setJoinFromPreview] = useState(false);
   // Beatmakers
   const [beats, setBeats] = useState([]); const [bmList, setBmList] = useState([]); const [myBm, setMyBm] = useState(null);
   const [beatsErr, setBeatsErr] = useState(''); const [beatsLoading, setBeatsLoading] = useState(false);
@@ -699,7 +742,7 @@ function ClipClapApp() {
   const videoLink = (v) => `${location.origin}${location.pathname}?v=${v.id}`;
   const shareProfile = async (username) => {
     const url = `${location.origin}${location.pathname}`;
-    const text = `Viens me clasher sur ClipClap : @${username} 🎤`;
+    const text = `Viens me clasher sur ClipClap : @${username} 🎤 #ClipClap`;
     try { if (navigator.share) await navigator.share({ title: 'ClipClap', text, url }); else { await navigator.clipboard.writeText(url); say('Lien copié ! 🔗'); } } catch (e) {}
   };
   const fireConfetti = () => { const id = Date.now(); setConfetti(id); setTimeout(() => setConfetti(c => c === id ? 0 : c), 3400); };
@@ -719,7 +762,7 @@ function ClipClapApp() {
   const share = async (v, e) => {
     e.stopPropagation(); click(); let ok = false;
     try {
-      if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `@${v.username} sur ClipClap : viens découvrir ClipClap 🎬`, url: videoLink(v) }); ok = true; }
+      if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `🔥 @${v.username} sur ClipClap : regarde et vote ! #ClipClap #Freestyle`, url: videoLink(v) }); ok = true; }
       else { await navigator.clipboard.writeText(videoLink(v)); ok = true; say('Lien copié ! 🔗'); }
     } catch (err) {}
     if (ok) sb.rpc('register_share', { vid: v.id }).then(({ data }) => { if (data) patch(v.id, x => ({ shares_count: x.shares_count + 1 })); });
@@ -1327,7 +1370,7 @@ function ClipClapApp() {
 
   if (!splashDone || !booted) return <Splash />;
   if (recovering) return <ResetScreen onDone={() => setRecovering(false)} />;
-  if (!session) return <AuthScreen />;
+  if (!session) return (deepLink.current && !joinFromPreview) ? <PublicPreview id={deepLink.current} onJoin={() => setJoinFromPreview(true)} /> : <AuthScreen />;
   if (!me) return <div className="h-full flex flex-col items-center justify-center bg-app gap-3"><span className="text-4xl">🎬</span><p className="text-xs text-gray-400">Chargement du profil...</p><button onClick={() => sb.auth.signOut()} className="text-xs underline text-gray-500">Se déconnecter</button></div>;
 
   const myVideos = videos.filter(v => v.user_id === me.id);
