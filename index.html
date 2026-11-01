@@ -1584,15 +1584,15 @@ function ClipClapApp() {
                 <p className="text-[11px] text-gray-300 leading-snug">Défie un rival · {(clashInstru && clashInstru.max_seconds) || 30} s</p>
               </button>
             </div>
+            {isAdmin && <div className="grid grid-cols-2 gap-2 mb-4">
+              <button onClick={() => setShowBattleForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Nouvelle battle (admin)</button>
+              <button onClick={() => setShowClashInstruForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Instru du Clash (admin)</button>
+            </div>}
             <button onClick={() => { click(); setBeatShop(null); setTab('beats'); }} className="w-full rounded-2xl p-4 mb-4 text-left bg-gradient-to-br from-amber-500/25 to-fuchsia-600/25 border border-amber-400/40 active:scale-95 transition flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-amber-400/20 flex items-center justify-center flex-shrink-0"><Icon n="music" size={24} className="text-amber-300" /></div>
               <div className="min-w-0 flex-1"><p className="font-black text-base">Beatmakers</p><p className="text-[11px] text-gray-300 leading-snug">Écoute les instrus en vente et trouve ton prochain son</p></div>
               <span className="text-gray-400 text-xl">›</span>
             </button>
-            {isAdmin && <div className="grid grid-cols-2 gap-2 mb-4">
-              <button onClick={() => setShowBattleForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Nouvelle battle (admin)</button>
-              <button onClick={() => setShowClashInstruForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Instru du Clash (admin)</button>
-            </div>}
             {((battle && !bEnded && board.length > 0) || toVoteCount > 0) && <div className="rounded-2xl p-4 mb-4 bg-white/5 border border-fuchsia-500/30 space-y-2">
               <p className="text-xs font-bold text-fuchsia-300 flex items-center gap-1.5"><Icon n="trophy" size={14} /> Votes ouverts</p>
               {battle && !bEnded && board.length > 0 && <button onClick={() => { const el = document.getElementById('battle-ranking'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm font-bold flex items-center justify-between"><span>Battle : {board.length} participant{board.length > 1 ? 's' : ''}</span><span className="text-xs text-fuchsia-300">{myVoteId ? 'Voté ✓' : 'Voter ↓'}</span></button>}
