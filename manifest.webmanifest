@@ -1,6 +1,6 @@
 {
-  "name": "ClipClap",
-  "short_name": "ClipClap",
+  "name": "KickClap",
+  "short_name": "KickClap",
   "description": "Pose ton clip. Gagne la battle.",
   "start_url": "./",
   "scope": "./",
