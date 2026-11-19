@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ClipClap</title>
+  <title>KickClap</title>
   <meta name="theme-color" content="#0b0719" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="ClipClap" />
+  <meta name="apple-mobile-web-app-title" content="KickClap" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="description" content="ClipClap : pose ton clip, gagne la battle." />
-  <meta property="og:site_name" content="ClipClap" />
+  <meta name="description" content="KickClap : pose ton clip, gagne la battle." />
+  <meta property="og:site_name" content="KickClap" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="fr_FR" />
-  <meta property="og:url" content="https://azizenbiri-pixel.github.io/ClipClap/" />
-  <meta property="og:image" content="https://azizenbiri-pixel.github.io/ClipClap/icon-512.png" />
+  <meta property="og:url" content="https://azizenbiri-pixel.github.io/KickClap/" />
+  <meta property="og:image" content="https://azizenbiri-pixel.github.io/KickClap/icon-512.png" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="ClipClap" />
-  <meta name="twitter:image" content="https://azizenbiri-pixel.github.io/ClipClap/icon-512.png" />
-  <meta property="og:title" content="ClipClap" />
+  <meta name="twitter:title" content="KickClap" />
+  <meta name="twitter:image" content="https://azizenbiri-pixel.github.io/KickClap/icon-512.png" />
+  <meta property="og:title" content="KickClap" />
   <meta property="og:description" content="Pose ton clip. Gagne la battle. Freestyles, clips et battle hebdomadaire." />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -229,7 +229,7 @@ const Splash = () => {
   return (
     <div className="h-full w-full relative overflow-hidden select-none" style={{ background: '#8f8f8f' }}>
       <img src="splash.jpg" alt="" aria-hidden="true" onError={() => setOk(false)} className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'blur(26px) brightness(.9)', transform: 'scale(1.18)' }} />
-      <img src="splash.jpg" alt="ClipClap : pose ton clip, gagne la battle !" onError={() => setOk(false)} className="absolute inset-0 w-full h-full object-contain" style={{ animation: 'splashIn 1s cubic-bezier(.2,1.1,.3,1) both' }} />
+      <img src="splash.jpg" alt="KickClap : pose ton clip, gagne la battle !" onError={() => setOk(false)} className="absolute inset-0 w-full h-full object-contain" style={{ animation: 'splashIn 1s cubic-bezier(.2,1.1,.3,1) both' }} />
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-44 h-1.5 bg-black/25 rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#a855f7,#ec4899)', animation: 'loadbar 2.4s .4s ease-in-out both' }} />
       </div>
@@ -248,7 +248,7 @@ const SplashClassic = () => (
       <Logo size={112} id="lgs" />
     </div>
     <h1 className="flex text-5xl font-black tracking-tight mb-2">
-      {'ClipClap'.split('').map((ch, i) => (
+      {'KickClap'.split('').map((ch, i) => (
         <span key={i} style={{ color: LETTER_COLORS[i], textShadow: `0 0 18px ${LETTER_COLORS[i]}88`, animation: `letterUp .6s ${0.7 + i * 0.07}s cubic-bezier(.2,1.2,.3,1) both` }}>{ch}</span>
       ))}
     </h1>
@@ -263,7 +263,7 @@ const SplashClassic = () => (
   </div>
 );
 
-/* ================= FILIGRANE CLIPCLAP ================= */
+/* ================= FILIGRANE KICKCLAP ================= */
 // Change de coin à chaque cycle : impossible à rogner en gardant la vidéo entière.
 const WM_POS = [{ top: '22%', left: 14 }, { top: '34%', right: 14 }, { top: '46%', left: 14 }, { top: '27%', right: 14 }];
 const Watermark = ({ user, gid = 'wmg' }) => {
@@ -274,7 +274,7 @@ const Watermark = ({ user, gid = 'wmg' }) => {
          onAnimationIteration={() => setI(x => (x + 1) % WM_POS.length)}>
       <Logo size={24} id={gid} />
       <div className="leading-tight" style={{ textShadow: '0 1px 4px rgba(0,0,0,.85)' }}>
-        <p className="text-[14px] font-black text-white">ClipClap</p>
+        <p className="text-[14px] font-black text-white">KickClap</p>
         <p className="text-[10px] font-semibold text-white/85">@{user}</p>
       </div>
     </div>
@@ -293,8 +293,8 @@ const PublicPreview = ({ id, onJoin }) => {
     <div className="h-full w-full bg-app text-white overflow-y-auto">
       <div className="max-w-sm mx-auto px-4 pt-6 pb-10 flex flex-col items-center">
         <div className="flex items-center gap-2.5 mb-4">
-          <img src="icon-192.png" alt="ClipClap" className="w-10 h-10 rounded-xl" />
-          <div className="leading-tight"><p className="text-lg font-black grad-text">ClipClap</p><p className="text-[11px] text-fuchsia-300 font-bold">#ClipClap</p></div>
+          <img src="icon-192.png" alt="KickClap" className="w-10 h-10 rounded-xl" />
+          <div className="leading-tight"><p className="text-lg font-black grad-text">KickClap</p><p className="text-[11px] text-fuchsia-300 font-bold">#KickClap</p></div>
         </div>
         {v === undefined && <p className="text-xs text-gray-400 py-24">Chargement…</p>}
         {v === null && <div className="py-16 text-center"><p className="text-sm font-bold mb-1">Vidéo introuvable</p><p className="text-xs text-gray-400">Elle a peut-être été supprimée.</p></div>}
@@ -307,7 +307,7 @@ const PublicPreview = ({ id, onJoin }) => {
           {v.caption && <p className="text-xs text-gray-300 text-center mt-1">{v.caption}</p>}
           <p className="text-[11px] text-gray-400 mt-1">❤️ {v.likes_count || 0} · 💬 {v.comments_count || 0}</p>
         </>}
-        <button onClick={onJoin} className="mt-6 w-full py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm active:scale-95 transition">Rejoindre ClipClap</button>
+        <button onClick={onJoin} className="mt-6 w-full py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm active:scale-95 transition">Rejoindre KickClap</button>
         <button onClick={onJoin} className="mt-3 text-[11px] text-gray-400 underline">J'ai déjà un compte</button>
         <p className="text-[10px] text-gray-500 mt-4 text-center">Gratuit · 15 ans minimum · Pose ton clip, gagne la battle.</p>
       </div>
@@ -355,23 +355,23 @@ const CLASH_REPLY_H = 12; // heures pour répondre à un clash
 const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
   cgu: { title: "Conditions d'utilisation", body: [
-    ['1. Objet', "ClipClap est une application de partage de courtes vidéos (clips et freestyles) avec un concours hebdomadaire appelé Battle."],
+    ['1. Objet', "KickClap est une application de partage de courtes vidéos (clips et freestyles) avec un concours hebdomadaire appelé Battle."],
     ['2. Compte', "Tu dois avoir au moins 15 ans pour créer un compte. Tu es responsable de ton mot de passe et de l'activité de ton compte. Tu ne dois pas usurper l'identité d'une autre personne."],
-    ['3. Contenus', "Tu ne peux publier que des contenus dont tu détiens les droits (image, voix, musique, instrumentaux). Sont interdits : les contenus haineux, violents, sexuellement explicites, harcelants, illégaux ou portant atteinte aux droits d'autrui. Tu gardes tes droits sur tes vidéos, mais tu autorises ClipClap à les afficher dans l'application, avec un filigrane ClipClap."],
-    ['4. Modération', "Tu peux signaler un contenu ou bloquer un utilisateur. ClipClap peut retirer tout contenu et suspendre tout compte qui ne respecte pas ces règles."],
-    ['5. Battle', "La Battle dure le temps annoncé dans l'application. Le classement est établi d'après les votes. ClipClap peut annuler des votes en cas de fraude."],
-    ['6. Responsabilité', "L'application est fournie en l'état. Les contenus sont publiés sous la responsabilité de leurs auteurs ; ClipClap retire rapidement les contenus illicites qui lui sont signalés."],
-    ['7. Beatmakers et instrus', "En ouvrant une boutique, tu certifies être l'auteur de tes instrus et détenir tous les droits (aucun sample non autorisé). Tu fixes ton prix, de 5 € à 500 €. ClipClap peut retirer sans préavis un instru signalé ou contraire aux droits d'autrui. Les conditions de vente et de licence seront précisées avant l'ouverture des achats."],
+    ['3. Contenus', "Tu ne peux publier que des contenus dont tu détiens les droits (image, voix, musique, instrumentaux). Sont interdits : les contenus haineux, violents, sexuellement explicites, harcelants, illégaux ou portant atteinte aux droits d'autrui. Tu gardes tes droits sur tes vidéos, mais tu autorises KickClap à les afficher dans l'application, avec un filigrane KickClap."],
+    ['4. Modération', "Tu peux signaler un contenu ou bloquer un utilisateur. KickClap peut retirer tout contenu et suspendre tout compte qui ne respecte pas ces règles."],
+    ['5. Battle', "La Battle dure le temps annoncé dans l'application. Le classement est établi d'après les votes. KickClap peut annuler des votes en cas de fraude."],
+    ['6. Responsabilité', "L'application est fournie en l'état. Les contenus sont publiés sous la responsabilité de leurs auteurs ; KickClap retire rapidement les contenus illicites qui lui sont signalés."],
+    ['7. Beatmakers et instrus', "En ouvrant une boutique, tu certifies être l'auteur de tes instrus et détenir tous les droits (aucun sample non autorisé). Tu fixes ton prix, de 5 € à 500 €. KickClap peut retirer sans préavis un instru signalé ou contraire aux droits d'autrui. Les conditions de vente et de licence seront précisées avant l'ouverture des achats."],
     ['8. Contact', 'Pour toute question : ' + CONTACT_EMAIL],
   ] },
   privacy: { title: 'Politique de confidentialité', body: [
     ['Données collectées', "Adresse email, pseudo, nom d'affichage, photo et bio (facultatives), vidéos, commentaires, likes, favoris, abonnements, votes et signalements."],
-    ['Utilisation', "Ces données servent uniquement à faire fonctionner ClipClap : créer ton compte, afficher tes vidéos, compter les vues, likes et votes, et modérer les contenus."],
+    ['Utilisation', "Ces données servent uniquement à faire fonctionner KickClap : créer ton compte, afficher tes vidéos, compter les vues, likes et votes, et modérer les contenus."],
     ['Ce qui est public', "Ton pseudo, ta photo, ta bio, tes vidéos, tes commentaires et tes compteurs sont visibles par les autres utilisateurs. Ton email ne l'est jamais."],
     ['Hébergement', "Les données sont stockées chez Supabase. Elles ne sont ni vendues ni cédées à des tiers."],
     ['Conservation', "Tes données sont conservées tant que ton compte existe. Quand tu le supprimes, ton compte, tes vidéos, tes commentaires et tes likes sont effacés."],
     ['Tes droits', "Tu peux accéder à tes données, les corriger et supprimer ton compte depuis Profil > Réglages > Supprimer mon compte. Tu peux aussi écrire à " + CONTACT_EMAIL + " ou saisir la CNIL (cnil.fr)."],
-    ['Stockage sur ton appareil', "ClipClap enregistre dans ton navigateur uniquement ce qui sert à te garder connecté."],
+    ['Stockage sur ton appareil', "KickClap enregistre dans ton navigateur uniquement ce qui sert à te garder connecté."],
   ] },
 };
 const LegalSheet = ({ type, onClose }) => {
@@ -444,7 +444,7 @@ function AuthScreen() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center bg-app px-6">
       <div className="mb-3"><Logo size={84} id="lga" /></div>
-      <h1 className="text-3xl font-black mb-1 grad-text">ClipClap</h1>
+      <h1 className="text-3xl font-black mb-1 grad-text">KickClap</h1>
       <p className="text-xs text-gray-400 mb-5">{mode === 'login' ? 'Connecte-toi pour continuer' : mode === 'forgot' ? 'Recevoir un lien de réinitialisation' : 'Crée ton compte'}</p>
       <form onSubmit={submit} className="w-full max-w-xs space-y-3">
         {mode === 'signup' && <>
@@ -472,7 +472,7 @@ function AuthScreen() {
 }
 
 /* ================= APPLICATION ================= */
-function ClipClapApp() {
+function KickClapApp() {
   const [booted, setBooted] = useState(false); const [recovering, setRecovering] = useState(false);
   const [blocked, setBlocked] = useState({}); const [blockedList, setBlockedList] = useState([]); const [menuVideo, setMenuVideo] = useState(null);
   const [results, setResults] = useState([]);
@@ -742,8 +742,8 @@ function ClipClapApp() {
   const videoLink = (v) => `${location.origin}${location.pathname}?v=${v.id}`;
   const shareProfile = async (username) => {
     const url = `${location.origin}${location.pathname}`;
-    const text = `Viens me clasher sur ClipClap : @${username} 🎤 #ClipClap`;
-    try { if (navigator.share) await navigator.share({ title: 'ClipClap', text, url }); else { await navigator.clipboard.writeText(url); say('Lien copié ! 🔗'); } } catch (e) {}
+    const text = `Viens me clasher sur KickClap : @${username} 🎤 #KickClap`;
+    try { if (navigator.share) await navigator.share({ title: 'KickClap', text, url }); else { await navigator.clipboard.writeText(url); say('Lien copié ! 🔗'); } } catch (e) {}
   };
   const fireConfetti = () => { const id = Date.now(); setConfetti(id); setTimeout(() => setConfetti(c => c === id ? 0 : c), 3400); };
   // Double tap = like avec un gros cœur ; un seul tap = lecture / pause
@@ -762,7 +762,7 @@ function ClipClapApp() {
   const share = async (v, e) => {
     e.stopPropagation(); click(); let ok = false;
     try {
-      if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `🔥 @${v.username} sur ClipClap : regarde et vote ! #ClipClap #Freestyle`, url: videoLink(v) }); ok = true; }
+      if (navigator.share) { await navigator.share({ title: 'KickClap', text: `🔥 @${v.username} sur KickClap : regarde et vote ! #KickClap #Freestyle`, url: videoLink(v) }); ok = true; }
       else { await navigator.clipboard.writeText(videoLink(v)); ok = true; say('Lien copié ! 🔗'); }
     } catch (err) {}
     if (ok) sb.rpc('register_share', { vid: v.id }).then(({ data }) => { if (data) patch(v.id, x => ({ shares_count: x.shares_count + 1 })); });
@@ -878,11 +878,11 @@ function ClipClapApp() {
 
   const publishFile = async (e) => {
     e.preventDefault(); if (!file) return say("Choisis d'abord une vidéo 🎬");
-    if (await upload(file, caption || 'Nouvelle vidéo ClipClap ! 🎬 #clipclap', `Son original - ${me.display_name || me.username} 🎵`, null, 'clip')) { setShowUpload(false); setFile(null); setCaption(''); }
+    if (await upload(file, caption || 'Nouvelle vidéo KickClap ! 🎬 #kickclap', `Son original - ${me.display_name || me.username} 🎵`, null, 'clip')) { setShowUpload(false); setFile(null); setCaption(''); }
   };
   const publishFreestyle = async () => {
     if (clashMode) { const ok = await publishClash(blob, clashMode); if (ok) { setPreviewUrl(null); setBlob(null); setClashMode(null); setInstru(null); setInstruUrl(null); } return; }
-    if (await upload(blob, battleMode ? `🏆 Battle : ${battle.title} #battle` : `Freestyle sur ${instru || 'une instru'} 🎤 #clipclap`, `Son original - ${me.display_name || me.username} 🎵`, battleMode ? battle.id : null, 'freestyle', battleMode ? 45 : 120)) { setPreviewUrl(null); setBlob(null); setInstru(null); setInstruUrl(null); setBattleMode(false); }
+    if (await upload(blob, battleMode ? `🏆 Battle : ${battle.title} #battle` : `Freestyle sur ${instru || 'une instru'} 🎤 #kickclap`, `Son original - ${me.display_name || me.username} 🎵`, battleMode ? battle.id : null, 'freestyle', battleMode ? 45 : 120)) { setPreviewUrl(null); setBlob(null); setInstru(null); setInstruUrl(null); setBattleMode(false); }
   };
 
   const removeVideo = async (v, e) => {
@@ -1108,7 +1108,7 @@ function ClipClapApp() {
   const clashError = (msg) => /schema cache|Could not find the function/i.test(msg || '') ? "Le clash n'est pas encore activé sur le serveur (mise à jour de la base à faire)." : msg;
   const publishClash = async (f, mode) => {
     const maxSec = mode.max || 30;
-    const vidId = await upload(f, mode.type === 'reply' ? `Réponse au clash de @${mode.clash.challenger?.username}` : `Clash contre @${mode.opp.username}`, 'Clash · ClipClap', null, 'clash', maxSec);
+    const vidId = await upload(f, mode.type === 'reply' ? `Réponse au clash de @${mode.clash.challenger?.username}` : `Clash contre @${mode.opp.username}`, 'Clash · KickClap', null, 'clash', maxSec);
     if (!vidId) return false;
     if (mode.type === 'reply') {
       const { error } = await sb.rpc('answer_clash', { cid: mode.clash.id, vid: vidId });
@@ -1559,7 +1559,7 @@ function ClipClapApp() {
             )}
             
             <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex justify-center gap-6 bg-gradient-to-b from-black/90 to-transparent">
-              <span className="absolute left-4 top-3 text-[13px] font-black grad-text tracking-wide pointer-events-none">ClipClap</span>
+              <span className="absolute left-4 top-3 text-[13px] font-black grad-text tracking-wide pointer-events-none">KickClap</span>
               <button onClick={() => { click(); setSearchQ(''); setSearchRes([]); setShowSearch(true); }} className="absolute right-12 top-2 p-1.5 text-white"><Icon n="search" size={20} /></button>
               <button onClick={() => { click(); openNotifs(); }} className="absolute right-3 top-2 p-1.5 text-white"><Icon n="bell" size={20} />{unread > 0 && <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-fuchsia-500 text-[10px] font-bold flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}</button>
               {[['following', 'Abonnements'], ['foryou', 'Pour toi']].map(([k, l]) => (
@@ -1868,7 +1868,7 @@ function ClipClapApp() {
         <Sheet onClose={() => setShowSettings(false)} height="max-h-[85%]">
           <div className="p-5 space-y-2">
             <h3 className="text-base font-extrabold mb-2">Réglages</h3>
-            <p className="text-[11px] text-gray-400 leading-snug bg-white/5 rounded-xl p-3">Installe ClipClap comme une vraie app : sur iPhone, appuie sur Partager puis « Sur l'écran d'accueil ». Sur Android, menu du navigateur puis « Installer l'application ».</p>
+            <p className="text-[11px] text-gray-400 leading-snug bg-white/5 rounded-xl p-3">Installe KickClap comme une vraie app : sur iPhone, appuie sur Partager puis « Sur l'écran d'accueil ». Sur Android, menu du navigateur puis « Installer l'application ».</p>
             <button onClick={() => { setShowSettings(false); setTourStep(0); setShowTour(true); }} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Revoir le tutoriel</button>
             <button onClick={() => setLegal('cgu')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Conditions d'utilisation</button>
             <button onClick={() => setLegal('privacy')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Politique de confidentialité</button>
@@ -1901,7 +1901,7 @@ function ClipClapApp() {
       {/* ===== TUTORIEL DE BIENVENUE ===== */}
       {showTour && (() => {
         const slides = [
-          { icon: 'clap', title: 'Studio', text: "Filme ton freestyle au Studio. Ton freestyle passe sur l'accueil avec le filigrane ClipClap : partage-le partout." },
+          { icon: 'clap', title: 'Studio', text: "Filme ton freestyle au Studio. Ton freestyle passe sur l'accueil avec le filigrane KickClap : partage-le partout." },
           { icon: 'flame', title: 'Battle', text: "Une instru imposée, un chrono, la communauté vote. Le plus de votes gagne un trophée." },
           { icon: 'swords', title: 'Clash', text: `Tag un rival : il a ${CLASH_REPLY_H} h pour te répondre. Vos deux vidéos côte à côte, la communauté tranche.` },
           { icon: 'vinyl', title: 'BTM', text: "Écoute les aperçus des instrus des beatmakers et trouve ton prochain son. Tu produis ? Ouvre ta boutique et fixe ton prix." },
@@ -2022,7 +2022,7 @@ function ClipClapApp() {
                 <input inputMode="decimal" value={bf.price} onChange={e => setBf({ ...bf, price: e.target.value.replace(/[^0-9.,]/g, '').slice(0, 6) })} placeholder="5" className="mt-1 w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-500" />
               </label>
             </div>
-            <p className="text-[10px] text-gray-500 -mt-2">Prix de 5 € à 500 €. ClipClap prélèvera une commission à l'ouverture des paiements.</p>
+            <p className="text-[10px] text-gray-500 -mt-2">Prix de 5 € à 500 €. KickClap prélèvera une commission à l'ouverture des paiements.</p>
             <label className="flex items-start gap-2.5 text-[11px] text-gray-300 leading-snug">
               <input type="checkbox" checked={bf.rights} onChange={e => setBf({ ...bf, rights: e.target.checked })} className="mt-0.5 accent-fuchsia-500 w-4 h-4 flex-shrink-0" />
               <span>Je certifie être l'auteur de cet instru et détenir tous les droits dessus.</span>
@@ -2189,7 +2189,7 @@ function ClipClapApp() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<ClipClapApp />);
+ReactDOM.createRoot(document.getElementById('root')).render(<KickClapApp />);
 </script>
 </body>
 </html>
