@@ -1758,7 +1758,7 @@ function KickClapApp() {
               {clashMode && <span className="block text-xs font-medium text-gray-300 mt-1">{clashMode.type === 'reply' ? `Tu réponds à @${clashMode.clash.challenger?.username}` : `Tu défies @${clashMode.opp.username}`}</span>}
               <span className="block text-[11px] font-normal text-gray-400 mt-1">Une voix te présente, puis un décompte lance l'instru. Mets un casque pour une meilleure qualité.</span></div> : <label className="cursor-pointer bg-gradient-to-r from-fuchsia-500 to-violet-600 font-bold py-3 px-4 rounded-xl block text-center">
               📁 Importer un instrumental (MP3 / WAV)
-              <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
+              <input type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
             </label>}
             {instru && !hostMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold flex items-center gap-2"><div className="min-w-0 flex-1">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>{!battleMode && !clashMode && <button onClick={() => { click(); setInstru(null); setInstruUrl(null); }} aria-label="Retirer l'instru" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-200 flex-shrink-0 text-base leading-none">✕</button>}</div>}
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
@@ -1970,7 +1970,7 @@ function KickClapApp() {
           <form onSubmit={createBattle} className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
             <h3 className="text-base font-extrabold text-center">Nouvelle battle</h3>
             <input value={bTitle} onChange={e => setBTitle(e.target.value)} placeholder="Titre (ex : Beat de la Semaine #2)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500" />
-            <input type="file" accept="audio/*" onChange={e => setBFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
+            <input type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*" onChange={e => setBFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
             <div className="flex items-center gap-2 text-xs text-gray-300"><span>Durée (jours)</span><input type="number" min="1" max="30" value={bDays} onChange={e => setBDays(e.target.value)} className="w-16 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-center" /></div>
             <div className="flex items-center gap-2 text-xs text-gray-300"><span>Temps de freestyle (secondes)</span><input type="number" min="10" max="300" value={bSecs} onChange={e => setBSecs(e.target.value)} className="w-16 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-center" /></div>
             <p className="text-[10px] text-gray-500">La battle précédente est remplacée. Ses votes et ses résultats restent en base.</p>
@@ -2040,7 +2040,7 @@ function KickClapApp() {
           <form onSubmit={createClashInstru} className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
             <h3 className="text-base font-extrabold text-center">Instru du Clash</h3>
             <input value={ciTitle} onChange={e => setCiTitle(e.target.value)} placeholder="Titre (ex : Instru Clash #3)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500" />
-            <input type="file" accept="audio/*" onChange={e => setCiFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
+            <input type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*" onChange={e => setCiFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
             <div className="flex items-center gap-2 text-xs text-gray-300"><span>Temps de freestyle (secondes)</span><input type="number" min="10" max="300" value={ciSecs} onChange={e => setCiSecs(e.target.value)} className="w-16 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-center" /></div>
             <p className="text-[10px] text-gray-500">Ne change que les nouveaux clashs. Les clashs déjà lancés gardent leur instru.</p>
             <div className="flex gap-2">
