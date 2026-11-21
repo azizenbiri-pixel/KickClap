@@ -352,9 +352,9 @@ const REC_AUDIO_BPS = 96000;   // 96 kbit/s pour le son
 const MC_FILES = { q1: 'mc-blase.mp3', q2: 'mc-dou.mp3', q3: 'mc-represente.mp3', go: 'mc-go.mp3' };
 const CLASH_SELECT = '*, challenger:profiles!challenger_id(username,avatar_url), opponent:profiles!opponent_id(username,avatar_url), cv:videos!challenger_video_id(id,video_url,views_count), ov:videos!opponent_video_id(id,video_url,views_count)';    // temps laissé pour répondre à chaque question de la voix
 // Équilibre du son (1 = volume normal). Instru plus bas dans la vidéo, voix remontée et lissée.
-const MIX_INSTRU_SPEAKER = 0.6; // ce que tu entends dans le haut-parleur
-const MIX_INSTRU_REC = 0.25;    // l'instru dans la vidéo enregistrée
-const MIX_VOICE = 2.6;          // ta voix dans la vidéo enregistrée
+const MIX_INSTRU_SPEAKER = 0.8; // ce que tu entends dans le haut-parleur
+const MIX_INSTRU_REC = 0.35;    // l'instru dans la vidéo enregistrée
+const MIX_VOICE = 1.0;          // ta voix dans la vidéo enregistrée
 const CLASH_REPLY_H = 12; // heures pour répondre à un clash
 const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
@@ -1002,13 +1002,8 @@ function KickClapApp() {
       if (ctxRef.current) {
         try {
           const ctx = ctxRef.current; const dest = ctx.createMediaStreamDestination(); const aud = el.srcObject.getAudioTracks();
-          const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.15; lim.connect(dest);
-          if (aud.length) {
-            const mic = ctx.createMediaStreamSource(new MediaStream(aud)); const vg = ctx.createGain(); vg.gain.value = MIX_VOICE;
-            const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -26; comp.knee.value = 20; comp.ratio.value = 3.5; comp.attack.value = 0.005; comp.release.value = 0.25;
-            mic.connect(vg); vg.connect(comp); comp.connect(lim);
-          }
-          mixDestRef.current = lim; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+          if (aud.length) ctx.createMediaStreamSource(new MediaStream(aud)).connect(dest);
+          mixDestRef.current = dest; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
         } catch (e) { stream = el.srcObject; mixDestRef.current = null; }
       }
       const mr = new MediaRecorder(stream, opt); recRef.current = mr;
@@ -1804,7 +1799,6 @@ function KickClapApp() {
               <input type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
             </label>}
             {instru && !hostMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold flex items-center gap-2"><div className="min-w-0 flex-1">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>{!battleMode && !clashMode && <button onClick={() => { click(); setInstru(null); setInstruUrl(null); }} aria-label="Retirer l'instru" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-200 flex-shrink-0 text-base leading-none">✕</button>}</div>}
-            {(instru || hostMode) && <label className="flex items-start gap-2.5 text-[11px] text-gray-300 leading-snug bg-white/5 border border-white/10 rounded-xl p-3"><input type="checkbox" checked={headphones} onChange={e => setHeadphones(e.target.checked)} className="mt-0.5 accent-fuchsia-500 w-4 h-4 flex-shrink-0" /><span>🎧 J'ai un casque ou des écouteurs : son plus stable</span></label>}
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
             <button onClick={() => { click(); setRecMode(true); }} className="w-full bg-white text-black font-bold py-3 rounded-xl">🎥 {hostMode ? 'Lancer (présentation + décompte)' : "Lancer l'enregistrement"}</button>
           </div>
@@ -2211,7 +2205,7 @@ function KickClapApp() {
           </div>
           <div className="absolute inset-0 bg-zinc-900">
             <video autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]"
-              ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: headphones ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false } : { echoCancellation: true, noiseSuppression: false, autoGainControl: false } }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
+              ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
           </div>
           {intro && <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none px-6">
             {intro.mic
