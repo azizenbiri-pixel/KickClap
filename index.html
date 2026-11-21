@@ -1794,7 +1794,7 @@ function KickClapApp() {
             <h2 className="text-2xl font-black grad-text">Studio d'enregistrement</h2>
             {hostMode ? <div className="bg-fuchsia-500/15 border border-fuchsia-500/40 rounded-xl p-3 text-sm font-bold">{battleMode ? 'Battle' : 'Clash'} · instru imposé {instru ? `« ${instru} »` : '(aucun)'} · {recMax} s
               {clashMode && <span className="block text-xs font-medium text-gray-300 mt-1">{clashMode.type === 'reply' ? `Tu réponds à @${clashMode.clash.challenger?.username}` : `Tu défies @${clashMode.opp.username}`}</span>}
-              <span className="block text-[11px] font-normal text-gray-400 mt-1">Une voix te présente, puis un décompte lance l'instru. Mets un casque pour une meilleure qualité.</span></div> : <label className="cursor-pointer bg-gradient-to-r from-fuchsia-500 to-violet-600 font-bold py-3 px-4 rounded-xl block text-center">
+              <span className="block text-[11px] font-normal text-gray-400 mt-1">Une voix te présente, puis un décompte lance l'instru. Pour un meilleur son, utilise un casque filaire (évite le Bluetooth) ou rappe sans casque.</span></div> : <label className="cursor-pointer bg-gradient-to-r from-fuchsia-500 to-violet-600 font-bold py-3 px-4 rounded-xl block text-center">
               📁 Importer un instrumental (MP3 / WAV)
               <input type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
             </label>}
@@ -2205,7 +2205,7 @@ function KickClapApp() {
           </div>
           <div className="absolute inset-0 bg-zinc-900">
             <video autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]"
-              ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
+              ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
           </div>
           {intro && <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none px-6">
             {intro.mic
