@@ -351,6 +351,10 @@ const REC_AUDIO_BPS = 96000;   // 96 kbit/s pour le son
 // Fichiers de la voix du MC (à mettre dans le même dossier que ce fichier). S'ils sont absents, une voix de secours du téléphone est utilisée.
 const MC_FILES = { q1: 'mc-blase.mp3', q2: 'mc-dou.mp3', q3: 'mc-represente.mp3', go: 'mc-go.mp3' };
 const CLASH_SELECT = '*, challenger:profiles!challenger_id(username,avatar_url), opponent:profiles!opponent_id(username,avatar_url), cv:videos!challenger_video_id(id,video_url,views_count), ov:videos!opponent_video_id(id,video_url,views_count)';    // temps laissé pour répondre à chaque question de la voix
+// Équilibre du son (1 = volume normal). Instru plus bas dans la vidéo, voix remontée et lissée.
+const MIX_INSTRU_SPEAKER = 0.6; // ce que tu entends dans le haut-parleur
+const MIX_INSTRU_REC = 0.3;     // l'instru dans la vidéo enregistrée
+const MIX_VOICE = 1.8;          // ta voix dans la vidéo enregistrée
 const CLASH_REPLY_H = 12; // heures pour répondre à un clash
 const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
@@ -521,8 +525,7 @@ function KickClapApp() {
 
   // Studio
   const [instru, setInstru] = useState(null); const [instruUrl, setInstruUrl] = useState(null); const [lyrics, setLyrics] = useState('');
-  const [instruVol, setInstruVol] = useState(0.5); const instruVolRef = useRef(0.5); const instruGainRef = useRef(null); const [headphones, setHeadphones] = useState(false);
-  const changeVol = (v) => { instruVolRef.current = v; setInstruVol(v); if (instruGainRef.current) { try { instruGainRef.current.gain.value = v; } catch (e) {} } };
+  const instruGainRef = useRef(null); const [headphones, setHeadphones] = useState(false);
   const [recMode, setRecMode] = useState(false); const [recording, setRecording] = useState(false); const [blob, setBlob] = useState(null); const [previewUrl, setPreviewUrl] = useState(null);
   const camRef = useRef(null); const recRef = useRef(null); const chunksRef = useRef([]); const audioRef = useRef(null); const ctxRef = useRef(null); const instruBufRef = useRef(null); const instruSrcRef = useRef(null); const mixDestRef = useRef(null); const bufPromiseRef = useRef(null);
 
@@ -999,8 +1002,13 @@ function KickClapApp() {
       if (ctxRef.current) {
         try {
           const ctx = ctxRef.current; const dest = ctx.createMediaStreamDestination(); const aud = el.srcObject.getAudioTracks();
-          if (aud.length) ctx.createMediaStreamSource(new MediaStream(aud)).connect(dest);
-          mixDestRef.current = dest; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+          const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.15; lim.connect(dest);
+          if (aud.length) {
+            const mic = ctx.createMediaStreamSource(new MediaStream(aud)); const vg = ctx.createGain(); vg.gain.value = MIX_VOICE;
+            const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -26; comp.knee.value = 20; comp.ratio.value = 3.5; comp.attack.value = 0.005; comp.release.value = 0.25;
+            mic.connect(vg); vg.connect(comp); comp.connect(lim);
+          }
+          mixDestRef.current = lim; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
         } catch (e) { stream = el.srcObject; mixDestRef.current = null; }
       }
       const mr = new MediaRecorder(stream, opt); recRef.current = mr;
@@ -1017,7 +1025,7 @@ function KickClapApp() {
       const fallback = () => { const a = audioRef.current || new Audio(instruUrl); a.muted = false; try { a.currentTime = 0; } catch (e) {} audioRef.current = a; a.play().catch(() => {}); };
       const startWeb = (buf) => {
         const ctx = ctxRef.current; if (!ctx || !buf) return false;
-        try { if (ctx.resume) ctx.resume(); const src = ctx.createBufferSource(); src.buffer = buf; const g = ctx.createGain(); g.gain.value = instruVolRef.current; src.connect(g); g.connect(ctx.destination); if (mixDestRef.current) g.connect(mixDestRef.current); instruGainRef.current = g; src.start(0); instruSrcRef.current = src; return true; } catch (e) { return false; }
+        try { if (ctx.resume) ctx.resume(); const src = ctx.createBufferSource(); src.buffer = buf; const gs = ctx.createGain(); gs.gain.value = MIX_INSTRU_SPEAKER; src.connect(gs); gs.connect(ctx.destination); if (mixDestRef.current) { const gr = ctx.createGain(); gr.gain.value = MIX_INSTRU_REC; src.connect(gr); gr.connect(mixDestRef.current); } instruGainRef.current = gs; src.start(0); instruSrcRef.current = src; return true; } catch (e) { return false; }
       };
       if (ctxRef.current && instruBufRef.current && startWeb(instruBufRef.current)) return;
       if (ctxRef.current && bufPromiseRef.current) { bufPromiseRef.current.then(buf => { if (!startWeb(buf)) fallback(); }); return; }
@@ -1796,11 +1804,7 @@ function KickClapApp() {
               <input type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
             </label>}
             {instru && !hostMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold flex items-center gap-2"><div className="min-w-0 flex-1">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>{!battleMode && !clashMode && <button onClick={() => { click(); setInstru(null); setInstruUrl(null); }} aria-label="Retirer l'instru" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-200 flex-shrink-0 text-base leading-none">✕</button>}</div>}
-            {(instru || hostMode) && <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-3">
-              <div><div className="flex items-center justify-between text-xs font-bold mb-1"><span>🔊 Volume de l'instru</span><span className="text-gray-400">{Math.round(instruVol * 100)} %</span></div>
-                <input type="range" min="0" max="1" step="0.05" value={instruVol} onChange={e => changeVol(parseFloat(e.target.value))} className="w-full accent-fuchsia-500" /></div>
-              <label className="flex items-start gap-2.5 text-[11px] text-gray-300 leading-snug"><input type="checkbox" checked={headphones} onChange={e => setHeadphones(e.target.checked)} className="mt-0.5 accent-fuchsia-500 w-4 h-4 flex-shrink-0" /><span>🎧 J'ai un casque ou des écouteurs : meilleure qualité, voix et instru plus stables</span></label>
-            </div>}
+            {(instru || hostMode) && <label className="flex items-start gap-2.5 text-[11px] text-gray-300 leading-snug bg-white/5 border border-white/10 rounded-xl p-3"><input type="checkbox" checked={headphones} onChange={e => setHeadphones(e.target.checked)} className="mt-0.5 accent-fuchsia-500 w-4 h-4 flex-shrink-0" /><span>🎧 J'ai un casque ou des écouteurs : son plus stable</span></label>}
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
             <button onClick={() => { click(); setRecMode(true); }} className="w-full bg-white text-black font-bold py-3 rounded-xl">🎥 {hostMode ? 'Lancer (présentation + décompte)' : "Lancer l'enregistrement"}</button>
           </div>
@@ -2219,7 +2223,6 @@ function KickClapApp() {
             {lyrics ? <p className="text-lg leading-relaxed whitespace-pre-wrap">{lyrics}</p> : <p className="text-sm text-gray-400 italic">Aucune parole écrite dans le bloc-notes.</p>}
           </div>
           <div className="relative z-10 p-6 pb-10 flex flex-col items-center gap-4 bg-gradient-to-t from-black/90 to-transparent">
-            {instruUrl && <div className="w-full max-w-xs flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-4 py-2"><span className="text-sm">🔊</span><input type="range" min="0" max="1" step="0.05" value={instruVol} onChange={e => changeVol(parseFloat(e.target.value))} className="flex-1 accent-fuchsia-500" /></div>}
             <button onClick={toggleRec} className={`flex items-center justify-center w-20 h-20 rounded-full border-4 border-white bg-red-600 ${recording ? 'animate-pulse' : ''}`}>
               <div className={`bg-white transition-all ${recording ? 'w-6 h-6 rounded-sm' : 'w-8 h-8 rounded-md'}`}></div>
             </button>
