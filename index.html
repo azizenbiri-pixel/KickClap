@@ -522,7 +522,7 @@ function KickClapApp() {
   // Studio
   const [instru, setInstru] = useState(null); const [instruUrl, setInstruUrl] = useState(null); const [lyrics, setLyrics] = useState('');
   const [recMode, setRecMode] = useState(false); const [recording, setRecording] = useState(false); const [blob, setBlob] = useState(null); const [previewUrl, setPreviewUrl] = useState(null);
-  const camRef = useRef(null); const recRef = useRef(null); const chunksRef = useRef([]); const audioRef = useRef(null); const ctxRef = useRef(null); const instruBufRef = useRef(null); const instruSrcRef = useRef(null);
+  const camRef = useRef(null); const recRef = useRef(null); const chunksRef = useRef([]); const audioRef = useRef(null); const ctxRef = useRef(null); const instruBufRef = useRef(null); const instruSrcRef = useRef(null); const mixDestRef = useRef(null); const bufPromiseRef = useRef(null);
 
   const videoRef = useRef(null); const viewedRef = useRef(new Set()); const tx = useRef(0); const ty = useRef(0);
   const audioElRef = useRef(null);
@@ -924,8 +924,17 @@ function KickClapApp() {
   const stopInstru = () => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     if (instruSrcRef.current) { try { instruSrcRef.current.stop(); } catch (e) {} instruSrcRef.current = null; }
-    if (ctxRef.current) { try { ctxRef.current.close(); } catch (e) {} ctxRef.current = null; }
-    instruBufRef.current = null;
+    if (ctxRef.current) { const old = ctxRef.current; setTimeout(() => { try { old.close(); } catch (e) {} }, 1200); ctxRef.current = null; }
+    instruBufRef.current = null; bufPromiseRef.current = null; mixDestRef.current = null;
+  };
+  // Prépare le son de l'instru (à appeler quand l'utilisateur appuie sur le bouton, pour que l'iPhone l'autorise)
+  const prepareInstru = () => {
+    if (!instruUrl) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; const actx = new AC(); if (actx.resume) actx.resume();
+      ctxRef.current = actx; instruBufRef.current = null;
+      bufPromiseRef.current = fetch(instruUrl).then(r => r.arrayBuffer()).then(ab => new Promise((res, rej) => actx.decodeAudioData(ab, res, rej))).then(buf => { instruBufRef.current = buf; return buf; }).catch(() => null);
+    } catch (e) { ctxRef.current = null; }
   };
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   // Voix de secours (synthèse du téléphone, la plus grave possible) si les fichiers du MC sont absents
@@ -984,7 +993,15 @@ function KickClapApp() {
     try {
       chunksRef.current = [];
       const opt = MediaRecorder.isTypeSupported('video/webm') ? { mimeType: 'video/webm', videoBitsPerSecond: REC_VIDEO_BPS, audioBitsPerSecond: REC_AUDIO_BPS } : { videoBitsPerSecond: REC_VIDEO_BPS, audioBitsPerSecond: REC_AUDIO_BPS };
-      const mr = new MediaRecorder(el.srcObject, opt); recRef.current = mr;
+      let stream = el.srcObject; mixDestRef.current = null;
+      if (ctxRef.current) {
+        try {
+          const ctx = ctxRef.current; const dest = ctx.createMediaStreamDestination(); const aud = el.srcObject.getAudioTracks();
+          if (aud.length) ctx.createMediaStreamSource(new MediaStream(aud)).connect(dest);
+          mixDestRef.current = dest; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+        } catch (e) { stream = el.srcObject; mixDestRef.current = null; }
+      }
+      const mr = new MediaRecorder(stream, opt); recRef.current = mr;
       mr.ondataavailable = (ev) => ev.data && ev.data.size && chunksRef.current.push(ev.data);
       mr.onstop = () => { const b = new Blob(chunksRef.current, { type: mr.mimeType || 'video/webm' }); setBlob(b); setPreviewUrl(URL.createObjectURL(b)); };
       mr.start(); setRecording(true); return true;
@@ -995,10 +1012,14 @@ function KickClapApp() {
     setRecSec(0); clearInterval(recTick.current); recTick.current = setInterval(() => setRecSec(x => x + 1), 1000);
     clearTimeout(recTimer.current); recTimer.current = setTimeout(() => stopRecording(`Temps écoulé (${recMax} s)`), recMax * 1000);
     if (instruUrl) {
-      if (ctxRef.current && instruBufRef.current) {
-        try { if (ctxRef.current.resume) ctxRef.current.resume(); const src = ctxRef.current.createBufferSource(); src.buffer = instruBufRef.current; src.connect(ctxRef.current.destination); src.start(0); instruSrcRef.current = src; return; } catch (e) {}
-      }
-      const a = audioRef.current || new Audio(instruUrl); a.muted = false; try { a.currentTime = 0; } catch (e) {} audioRef.current = a; a.play().catch(() => {});
+      const fallback = () => { const a = audioRef.current || new Audio(instruUrl); a.muted = false; try { a.currentTime = 0; } catch (e) {} audioRef.current = a; a.play().catch(() => {}); };
+      const startWeb = (buf) => {
+        const ctx = ctxRef.current; if (!ctx || !buf) return false;
+        try { if (ctx.resume) ctx.resume(); const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination); if (mixDestRef.current) src.connect(mixDestRef.current); src.start(0); instruSrcRef.current = src; return true; } catch (e) { return false; }
+      };
+      if (ctxRef.current && instruBufRef.current && startWeb(instruBufRef.current)) return;
+      if (ctxRef.current && bufPromiseRef.current) { bufPromiseRef.current.then(buf => { if (!startWeb(buf)) fallback(); }); return; }
+      fallback();
     }
   };
   // Présentation du MC : 3 questions (2 s d'attente entre chaque), décompte 5 -> 1, puis « C'est parti, fais péter le MIC ! » et départ
@@ -1011,11 +1032,7 @@ function KickClapApp() {
     mcRef.current = new Audio();
     const tick = makeTicker();
     if (instruUrl) {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext; const actx = new AC(); if (actx.resume) actx.resume();
-        ctxRef.current = actx; instruBufRef.current = null;
-        fetch(instruUrl).then(r => r.arrayBuffer()).then(ab => new Promise((res, rej) => actx.decodeAudioData(ab, res, rej))).then(buf => { instruBufRef.current = buf; }).catch(() => {});
-      } catch (e) {}
+      prepareInstru();
       const inst = new Audio(instruUrl); inst.preload = 'auto'; inst.muted = true; audioRef.current = inst;
       const pr = inst.play(); if (pr && pr.then) pr.then(() => { inst.pause(); try { inst.currentTime = 0; } catch (e) {} inst.muted = false; }).catch(() => { inst.muted = false; });
     }
@@ -1041,6 +1058,7 @@ function KickClapApp() {
     if (!recording) {
       if (intro) return;
       if (hostMode) { runIntro(); return; }
+      prepareInstru();
       if (!beginRecorder()) return;
       beginFreestyle();
     } else stopRecording();
