@@ -353,8 +353,8 @@ const MC_FILES = { q1: 'mc-blase.mp3', q2: 'mc-dou.mp3', q3: 'mc-represente.mp3'
 const CLASH_SELECT = '*, challenger:profiles!challenger_id(username,avatar_url), opponent:profiles!opponent_id(username,avatar_url), cv:videos!challenger_video_id(id,video_url,views_count), ov:videos!opponent_video_id(id,video_url,views_count)';    // temps laissé pour répondre à chaque question de la voix
 // Équilibre du son (1 = volume normal). Instru plus bas dans la vidéo, voix remontée et lissée.
 const MIX_INSTRU_SPEAKER = 0.8; // ce que tu entends dans le haut-parleur
-const MIX_INSTRU_REC = 0.35;    // l'instru dans la vidéo enregistrée
-const MIX_VOICE = 1.0;          // ta voix dans la vidéo enregistrée
+const MIX_INSTRU_REC = 0.3;     // l'instru dans la vidéo enregistrée
+const MIX_VOICE = 2.2;          // ta voix dans la vidéo enregistrée
 const CLASH_REPLY_H = 12; // heures pour répondre à un clash
 const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
@@ -1002,7 +1002,7 @@ function KickClapApp() {
       if (ctxRef.current) {
         try {
           const ctx = ctxRef.current; const dest = ctx.createMediaStreamDestination(); const aud = el.srcObject.getAudioTracks();
-          if (aud.length) ctx.createMediaStreamSource(new MediaStream(aud)).connect(dest);
+          if (aud.length) { const vg = ctx.createGain(); vg.gain.value = MIX_VOICE; ctx.createMediaStreamSource(new MediaStream(aud)).connect(vg); vg.connect(dest); }
           mixDestRef.current = dest; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
         } catch (e) { stream = el.srcObject; mixDestRef.current = null; }
       }
