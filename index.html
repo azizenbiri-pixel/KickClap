@@ -353,8 +353,10 @@ const MC_FILES = { q1: 'mc-blase.mp3', q2: 'mc-dou.mp3', q3: 'mc-represente.mp3'
 const CLASH_SELECT = '*, challenger:profiles!challenger_id(username,avatar_url), opponent:profiles!opponent_id(username,avatar_url), cv:videos!challenger_video_id(id,video_url,views_count), ov:videos!opponent_video_id(id,video_url,views_count)';    // temps laissé pour répondre à chaque question de la voix
 // Équilibre du son (1 = volume normal). Instru plus bas dans la vidéo, voix remontée et lissée.
 const MIX_INSTRU_SPEAKER = 0.8; // ce que tu entends dans le haut-parleur
-const MIX_INSTRU_REC = 0.2;     // l'instru dans la vidéo enregistrée
-const MIX_VOICE = 4;          // ta voix dans la vidéo enregistrée
+const MIX_INSTRU_REC = 0.25;    // l'instru dans la vidéo enregistrée
+const MIX_VOICE = 4;            // gain de départ de ta voix (ensuite réglé automatiquement)
+const MIX_VOICE_TARGET = 0.12;  // niveau visé pour ta voix dans la vidéo (monte si elle est encore trop basse)
+const MIX_VOICE_MAX = 16;       // amplification maximale autorisée
 const CLASH_REPLY_H = 12; // heures pour répondre à un clash
 const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
@@ -525,7 +527,7 @@ function KickClapApp() {
 
   // Studio
   const [instru, setInstru] = useState(null); const [instruUrl, setInstruUrl] = useState(null); const [lyrics, setLyrics] = useState('');
-  const instruGainRef = useRef(null); const [headphones, setHeadphones] = useState(false);
+  const instruGainRef = useRef(null); const agcRef = useRef(null); const [headphones, setHeadphones] = useState(false);
   const [recMode, setRecMode] = useState(false); const [recording, setRecording] = useState(false); const [blob, setBlob] = useState(null); const [previewUrl, setPreviewUrl] = useState(null);
   const camRef = useRef(null); const recRef = useRef(null); const chunksRef = useRef([]); const audioRef = useRef(null); const ctxRef = useRef(null); const instruBufRef = useRef(null); const instruSrcRef = useRef(null); const mixDestRef = useRef(null); const bufPromiseRef = useRef(null);
 
@@ -930,6 +932,7 @@ function KickClapApp() {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     if (instruSrcRef.current) { try { instruSrcRef.current.stop(); } catch (e) {} instruSrcRef.current = null; }
     if (ctxRef.current) { const old = ctxRef.current; setTimeout(() => { try { old.close(); } catch (e) {} }, 1200); ctxRef.current = null; }
+    if (agcRef.current) { clearInterval(agcRef.current); agcRef.current = null; }
     instruBufRef.current = null; bufPromiseRef.current = null; mixDestRef.current = null; instruGainRef.current = null;
   };
   // Prépare le son de l'instru (à appeler quand l'utilisateur appuie sur le bouton, pour que l'iPhone l'autorise)
@@ -1002,8 +1005,26 @@ function KickClapApp() {
       if (ctxRef.current) {
         try {
           const ctx = ctxRef.current; const dest = ctx.createMediaStreamDestination(); const aud = el.srcObject.getAudioTracks();
-          if (aud.length) { const vg = ctx.createGain(); vg.gain.value = MIX_VOICE; ctx.createMediaStreamSource(new MediaStream(aud)).connect(vg); vg.connect(dest); }
-          mixDestRef.current = dest; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+          const bus = ctx.createGain(); const lim = ctx.createDynamicsCompressor();
+          lim.threshold.value = -3; lim.knee.value = 2; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2;
+          bus.connect(lim); lim.connect(dest);
+          if (aud.length) {
+            const mic = ctx.createMediaStreamSource(new MediaStream(aud)); const vg = ctx.createGain(); vg.gain.value = MIX_VOICE;
+            const an = ctx.createAnalyser(); an.fftSize = 1024; mic.connect(an); mic.connect(vg); vg.connect(bus);
+            // Réglage automatique : on mesure ta voix et on ajuste le volume pour viser un niveau constant
+            const data = new Float32Array(an.fftSize);
+            if (agcRef.current) clearInterval(agcRef.current);
+            agcRef.current = setInterval(() => {
+              try {
+                an.getFloatTimeDomainData(data); let sum = 0; for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+                const rms = Math.sqrt(sum / data.length);
+                if (rms < 0.004) return; // silence : on ne bouge pas (évite d'amplifier le souffle)
+                const want = Math.max(1, Math.min(MIX_VOICE_MAX, MIX_VOICE_TARGET / rms)); const now = vg.gain.value;
+                vg.gain.setTargetAtTime(want, ctx.currentTime, want < now ? 0.05 : 0.5);
+              } catch (e) {}
+            }, 80);
+          }
+          mixDestRef.current = bus; stream = new MediaStream([...el.srcObject.getVideoTracks(), ...dest.stream.getAudioTracks()]);
         } catch (e) { stream = el.srcObject; mixDestRef.current = null; }
       }
       const mr = new MediaRecorder(stream, opt); recRef.current = mr;
