@@ -353,10 +353,10 @@ const MC_FILES = { q1: 'mc-blase.mp3', q2: 'mc-dou.mp3', q3: 'mc-represente.mp3'
 const CLASH_SELECT = '*, challenger:profiles!challenger_id(username,avatar_url), opponent:profiles!opponent_id(username,avatar_url), cv:videos!challenger_video_id(id,video_url,views_count), ov:videos!opponent_video_id(id,video_url,views_count)';    // temps laissé pour répondre à chaque question de la voix
 // Équilibre du son (1 = volume normal). Instru plus bas dans la vidéo, voix remontée et lissée.
 const MIX_INSTRU_SPEAKER = 0.8; // ce que tu entends dans le haut-parleur
-const MIX_INSTRU_REC = 0.15;     // l'instru dans la vidéo enregistrée
+const MIX_INSTRU_REC = 0.15;    // l'instru dans la vidéo enregistrée
 const MIX_VOICE = 4;            // gain de départ de ta voix (ensuite réglé automatiquement)
 const MIX_VOICE_TARGET = 0.30;  // niveau visé pour ta voix dans la vidéo (monte si elle est encore trop basse)
-const MIX_VOICE_MAX = 16;       // amplification maximale autorisée
+const MIX_VOICE_MAX = 40;       // amplification maximale autorisée
 const CLASH_REPLY_H = 12; // heures pour répondre à un clash
 const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
@@ -527,7 +527,7 @@ function KickClapApp() {
 
   // Studio
   const [instru, setInstru] = useState(null); const [instruUrl, setInstruUrl] = useState(null); const [lyrics, setLyrics] = useState('');
-  const instruGainRef = useRef(null); const agcRef = useRef(null); const [headphones, setHeadphones] = useState(false);
+  const instruGainRef = useRef(null); const agcRef = useRef(null); const mcBufRef = useRef({}); const mcSrcRef = useRef(null); const [headphones, setHeadphones] = useState(false);
   const [recMode, setRecMode] = useState(false); const [recording, setRecording] = useState(false); const [blob, setBlob] = useState(null); const [previewUrl, setPreviewUrl] = useState(null);
   const camRef = useRef(null); const recRef = useRef(null); const chunksRef = useRef([]); const audioRef = useRef(null); const ctxRef = useRef(null); const instruBufRef = useRef(null); const instruSrcRef = useRef(null); const mixDestRef = useRef(null); const bufPromiseRef = useRef(null);
 
@@ -933,13 +933,13 @@ function KickClapApp() {
     if (instruSrcRef.current) { try { instruSrcRef.current.stop(); } catch (e) {} instruSrcRef.current = null; }
     if (ctxRef.current) { const old = ctxRef.current; setTimeout(() => { try { old.close(); } catch (e) {} }, 1200); ctxRef.current = null; }
     if (agcRef.current) { clearInterval(agcRef.current); agcRef.current = null; }
-    instruBufRef.current = null; bufPromiseRef.current = null; mixDestRef.current = null; instruGainRef.current = null;
+    instruBufRef.current = null; bufPromiseRef.current = null; mixDestRef.current = null; instruGainRef.current = null; mcBufRef.current = {};
   };
   // Prépare le son de l'instru (à appeler quand l'utilisateur appuie sur le bouton, pour que l'iPhone l'autorise)
   const prepareInstru = () => {
     if (!instruUrl) return;
     try {
-      const AC = window.AudioContext || window.webkitAudioContext; const actx = new AC(); if (actx.resume) actx.resume();
+      const AC = window.AudioContext || window.webkitAudioContext; const actx = ctxRef.current || new AC(); if (actx.resume) actx.resume();
       ctxRef.current = actx; instruBufRef.current = null;
       bufPromiseRef.current = fetch(instruUrl).then(r => r.arrayBuffer()).then(ab => new Promise((res, rej) => actx.decodeAudioData(ab, res, rej))).then(buf => { instruBufRef.current = buf; return buf; }).catch(() => null);
     } catch (e) { ctxRef.current = null; }
@@ -957,13 +957,31 @@ function KickClapApp() {
     } catch (e) { res(); }
   });
   // Joue un enregistrement de la voix du MC ; renvoie false s'il est introuvable
-  const playMc = (key) => new Promise((res) => {
+  const playMcEl = (key) => new Promise((res) => {
     const mc = mcRef.current; if (!mc) return res(false);
     let done = false; const end = (ok) => { if (!done) { done = true; mc.onended = null; mc.onerror = null; res(ok); } };
     mc.onended = () => end(true); mc.onerror = () => end(false);
     mc.src = MC_FILES[key];
     const pr = mc.play(); if (pr && pr.catch) pr.catch(() => end(false));
     setTimeout(() => end(false), 12000);
+  });
+  // Voix du MC : jouée par le même circuit audio que l'instru (autorisé par l'iPhone, marche aussi avec casque)
+  const playMc = (key) => new Promise(async (res) => {
+    const ctx = ctxRef.current; const pr = mcBufRef.current[key];
+    if (ctx && pr) {
+      try {
+        const buf = await pr;
+        if (buf) {
+          if (ctx.resume) await ctx.resume();
+          const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination);
+          let done = false; const end = (ok) => { if (!done) { done = true; res(ok); } };
+          src.onended = () => end(true); mcSrcRef.current = src; src.start(0);
+          setTimeout(() => end(true), Math.ceil(buf.duration * 1000) + 1500);
+          return;
+        }
+      } catch (e) {}
+    }
+    playMcEl(key).then(res);
   });
   // Petits « bips » du décompte (sons simples, pas de voix)
   const makeTicker = () => {
@@ -982,6 +1000,7 @@ function KickClapApp() {
     introToken.current++;
     try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {}
     try { if (mcRef.current) { mcRef.current.onended = null; mcRef.current.pause(); } } catch (e) {}
+    try { if (mcSrcRef.current) { mcSrcRef.current.onended = null; mcSrcRef.current.stop(); mcSrcRef.current = null; } } catch (e) {}
   };
 
   const stopRecording = (msg) => {
@@ -1056,6 +1075,14 @@ function KickClapApp() {
     setRecSec(0);
     // Les sons sont « débloqués » pendant le geste de l'utilisateur (obligatoire sur iPhone)
     mcRef.current = new Audio();
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!ctxRef.current) { const c = new AC(); if (c.resume) c.resume(); ctxRef.current = c; }
+      const cx = ctxRef.current; mcBufRef.current = {};
+      Object.keys(MC_FILES).forEach(k => {
+        mcBufRef.current[k] = fetch(MC_FILES[k]).then(r => { if (!r.ok) throw new Error('absent'); return r.arrayBuffer(); }).then(ab => new Promise((rs, rj) => cx.decodeAudioData(ab, rs, rj))).catch(() => null);
+      });
+    } catch (e) {}
     const tick = makeTicker();
     if (instruUrl) {
       prepareInstru();
