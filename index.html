@@ -1029,7 +1029,10 @@ function KickClapApp() {
           bus.connect(lim); lim.connect(dest);
           if (aud.length) {
             const mic = ctx.createMediaStreamSource(new MediaStream(aud)); const vg = ctx.createGain(); vg.gain.value = MIX_VOICE;
-            const an = ctx.createAnalyser(); an.fftSize = 1024; mic.connect(an); mic.connect(vg); vg.connect(bus);
+            // Le micro de certains iPhone/casques sort en stéréo avec la voix d'un seul côté : on additionne les deux côtés en un seul canal centré
+            const split = ctx.createChannelSplitter(2); mic.connect(split);
+            const pre = ctx.createGain(); pre.channelCount = 1; pre.channelCountMode = 'explicit'; split.connect(pre, 0); split.connect(pre, 1);
+            const an = ctx.createAnalyser(); an.fftSize = 1024; pre.connect(an); pre.connect(vg); vg.connect(bus);
             // Réglage automatique : on mesure ta voix et on ajuste le volume pour viser un niveau constant
             const data = new Float32Array(an.fftSize);
             if (agcRef.current) clearInterval(agcRef.current);
@@ -1075,12 +1078,14 @@ function KickClapApp() {
     setRecSec(0);
     // Les sons sont « débloqués » pendant le geste de l'utilisateur (obligatoire sur iPhone)
     mcRef.current = new Audio();
+    // Autorise la voix de secours du téléphone (sinon l'iPhone peut la rendre muette quand elle est lancée après une attente)
+    try { if (window.speechSynthesis) { speechSynthesis.cancel(); const u0 = new SpeechSynthesisUtterance(' '); u0.volume = 0; speechSynthesis.speak(u0); speechSynthesis.getVoices(); } } catch (e) {}
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!ctxRef.current) { const c = new AC(); if (c.resume) c.resume(); ctxRef.current = c; }
       const cx = ctxRef.current; mcBufRef.current = {};
       Object.keys(MC_FILES).forEach(k => {
-        mcBufRef.current[k] = fetch(MC_FILES[k]).then(r => { if (!r.ok) throw new Error('absent'); return r.arrayBuffer(); }).then(ab => new Promise((rs, rj) => cx.decodeAudioData(ab, rs, rj))).catch(() => null);
+        mcBufRef.current[k] = (async () => { const base = MC_FILES[k].replace(/\.mp3$/, ''); for (const ext of ['.mp3', '.m4a', '.wav']) { try { const r = await fetch(base + ext); if (r.ok) return await r.arrayBuffer(); } catch (e) {} } throw new Error('absent'); })().then(ab => new Promise((rs, rj) => cx.decodeAudioData(ab, rs, rj))).catch(() => null);
       });
     } catch (e) {}
     const tick = makeTicker();
@@ -2253,7 +2258,7 @@ function KickClapApp() {
           </div>
           <div className="absolute inset-0 bg-zinc-900">
             <video autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]"
-              ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
+              ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
           </div>
           {intro && <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none px-6">
             {intro.mic
