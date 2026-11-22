@@ -1078,8 +1078,6 @@ function KickClapApp() {
     setRecSec(0);
     // Les sons sont « débloqués » pendant le geste de l'utilisateur (obligatoire sur iPhone)
     mcRef.current = new Audio();
-    // Autorise la voix de secours du téléphone (sinon l'iPhone peut la rendre muette quand elle est lancée après une attente)
-    try { if (window.speechSynthesis) { speechSynthesis.cancel(); const u0 = new SpeechSynthesisUtterance(' '); u0.volume = 0; speechSynthesis.speak(u0); speechSynthesis.getVoices(); } } catch (e) {}
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!ctxRef.current) { const c = new AC(); if (c.resume) c.resume(); ctxRef.current = c; }
@@ -1115,7 +1113,7 @@ function KickClapApp() {
   const toggleRec = () => {
     if (!recording) {
       if (intro) return;
-      if (hostMode) { runIntro(); return; }
+      if (hostMode) { runIntro().catch(err => alert('Erreur au démarrage : ' + (err && err.message ? err.message : err))); return; }
       prepareInstru();
       if (!beginRecorder()) return;
       beginFreestyle();
